@@ -1,9 +1,26 @@
 from flask import Flask, jsonify, request, send_file
-from collections import deque
+from collections import deque, Counter
 
 app = Flask(__name__)
-hist = deque(maxlen=40)
-stats = {"PLAYER":0,"BANKER":0,"TIE":0}
+
+hist = deque(maxlen=60)
+stats = Counter()
+
+def analise():
+    if len(hist) < 6:
+        return "Dados insuficientes"
+
+    ultimos = list(hist)[:6]
+    streak = len(list(iter(lambda: ultimos[0], None)))
+
+    contagem = Counter(ultimos)
+    dominante = contagem.most_common(1)[0][0]
+
+    return {
+        "dominante_recente": dominante,
+        "sequencia": contagem[dominante],
+        "nota": "Tendência estatística visual (não é recomendação de aposta)"
+    }
 
 @app.route("/")
 def home():
@@ -20,8 +37,12 @@ def add():
 def data():
     total = sum(stats.values())
     return jsonify({
-        "percent": {k: round((v/total)*100,1) if total else 0 for k,v in stats.items()},
-        "history": list(hist)
+        "percent": {
+            k: round((stats[k]/total)*100,1) if total else 0
+            for k in ["PLAYER","BANKER","TIE"]
+        },
+        "history": list(hist),
+        "analysis": analise()
     })
 
 app.run(host="0.0.0.0", port=10000)
