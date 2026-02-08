@@ -1,53 +1,181 @@
 <!doctype html>
-<html>
+<html lang="pt-br">
 <head>
 <meta charset="utf-8">
-<title>Bac Bo PRO</title>
+<title>Evolution • Bac Bo</title>
+
 <style>
-body{background:#0b0b0b;color:#fff;font-family:Arial}
-.cards{display:flex;gap:15px}
-.card{padding:18px;border-radius:12px;width:160px;text-align:center}
-.PLAYER{background:#1f6fff}.BANKER{background:#e63946}.TIE{background:#2ecc71}
-.grid{margin-top:15px;display:grid;grid-template-columns:repeat(10,1fr);gap:8px}
-.box{padding:12px;border-radius:8px;text-align:center;font-weight:bold}
-.btns{margin-top:15px}
-button{padding:10px 14px;border-radius:8px;border:0;margin-right:8px;cursor:pointer}
-.panel{margin-top:15px;padding:12px;background:#1a1a1a;border-radius:8px}
+:root{
+  --bg:#0a0a0a;
+  --panel:#141414;
+  --border:#222;
+  --txt:#eaeaea;
+  --muted:#9a9a9a;
+  --player:#1f6fff;
+  --banker:#d83a3a;
+  --tie:#2ecc71;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--txt);
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+header{
+  padding:14px 22px;
+  border-bottom:1px solid var(--border);
+  font-size:18px;
+  letter-spacing:.5px;
+}
+
+header span{
+  color:#aaa;
+  font-size:13px;
+}
+
+.container{
+  padding:18px 22px;
+}
+
+.cards{
+  display:flex;
+  gap:14px;
+}
+
+.card{
+  flex:1;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:16px;
+}
+
+.card h3{
+  margin:0;
+  font-size:13px;
+  color:var(--muted);
+  font-weight:500;
+}
+
+.card .value{
+  margin-top:6px;
+  font-size:28px;
+  font-weight:600;
+}
+
+.PLAYER .value{color:var(--player)}
+.BANKER .value{color:var(--banker)}
+.TIE .value{color:var(--tie)}
+
+.controls{
+  margin-top:18px;
+  display:flex;
+  gap:10px;
+}
+
+button{
+  flex:1;
+  background:#1b1b1b;
+  color:#fff;
+  border:1px solid var(--border);
+  padding:12px;
+  border-radius:8px;
+  font-size:14px;
+  cursor:pointer;
+}
+
+button:hover{background:#222}
+
+.analysis{
+  margin-top:18px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:14px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+.grid{
+  margin-top:18px;
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  gap:6px;
+}
+
+.cell{
+  padding:10px 0;
+  text-align:center;
+  font-size:12px;
+  border-radius:6px;
+  background:#1b1b1b;
+  border:1px solid var(--border);
+}
+
+.cell.PLAYER{background:rgba(31,111,255,.15);color:var(--player)}
+.cell.BANKER{background:rgba(216,58,58,.15);color:var(--banker)}
+.cell.TIE{background:rgba(46,204,113,.15);color:var(--tie)}
 </style>
 </head>
+
 <body>
 
-<h1>🎲 Bac Bo • Observação Profissional</h1>
+<header>
+  Evolution Gaming <span>• Bac Bo • Live Observation</span>
+</header>
 
-<div class="cards" id="cards"></div>
+<div class="container">
 
-<div class="btns">
-  <button onclick="add('PLAYER')">PLAYER</button>
-  <button onclick="add('BANKER')">BANKER</button>
-  <button onclick="add('TIE')">TIE</button>
+  <div class="cards" id="cards"></div>
+
+  <div class="controls">
+    <button onclick="add('PLAYER')">PLAYER</button>
+    <button onclick="add('BANKER')">BANKER</button>
+    <button onclick="add('TIE')">TIE</button>
+  </div>
+
+  <div class="analysis" id="analysis">
+    Aguardando dados…
+  </div>
+
+  <div class="grid" id="grid"></div>
+
 </div>
-
-<div class="panel" id="analysis"></div>
-
-<div class="grid" id="grid"></div>
 
 <script>
 async function load(){
  const d = await (await fetch('/data')).json();
 
  cards.innerHTML = `
-  <div class="card PLAYER">PLAYER<br>${d.percent.PLAYER||0}%</div>
-  <div class="card BANKER">BANKER<br>${d.percent.BANKER||0}%</div>
-  <div class="card TIE">TIE<br>${d.percent.TIE||0}%</div>`;
+  <div class="card PLAYER">
+    <h3>PLAYER</h3>
+    <div class="value">${d.percent.PLAYER || 0}%</div>
+  </div>
+  <div class="card BANKER">
+    <h3>BANKER</h3>
+    <div class="value">${d.percent.BANKER || 0}%</div>
+  </div>
+  <div class="card TIE">
+    <h3>TIE</h3>
+    <div class="value">${d.percent.TIE || 0}%</div>
+  </div>
+ `;
 
- grid.innerHTML = d.history.map(x=>`<div class="box ${x}">${x}</div>`).join('');
+ grid.innerHTML = d.history
+  .map(x=>`<div class="cell ${x}">${x[0]}</div>`)
+  .join('');
 
  analysis.innerHTML = d.analysis
-   ? `<b>Análise:</b><br>
-      Dominante recente: ${d.analysis.dominante_recente}<br>
-      Sequência: ${d.analysis.sequencia}<br>
-      <i>${d.analysis.nota}</i>`
-   : '';
+   ? `
+     Dominante recente: <b>${d.analysis.dominante_recente}</b><br>
+     Sequência: ${d.analysis.sequencia}<br>
+     <span>${d.analysis.nota}</span>
+   `
+   : 'Aguardando dados…';
 }
 
 async function add(r){
