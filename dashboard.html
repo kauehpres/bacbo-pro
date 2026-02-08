@@ -12,11 +12,12 @@ body{background:#0b0b0b;color:#fff;font-family:Arial}
 .box{padding:12px;border-radius:8px;text-align:center;font-weight:bold}
 .btns{margin-top:15px}
 button{padding:10px 14px;border-radius:8px;border:0;margin-right:8px;cursor:pointer}
+.panel{margin-top:15px;padding:12px;background:#1a1a1a;border-radius:8px}
 </style>
 </head>
 <body>
 
-<h1>🎲 Bac Bo • Observação</h1>
+<h1>🎲 Bac Bo • Observação Profissional</h1>
 
 <div class="cards" id="cards"></div>
 
@@ -26,22 +27,40 @@ button{padding:10px 14px;border-radius:8px;border:0;margin-right:8px;cursor:poin
   <button onclick="add('TIE')">TIE</button>
 </div>
 
+<div class="panel" id="analysis"></div>
+
 <div class="grid" id="grid"></div>
 
 <script>
 async function load(){
  const d = await (await fetch('/data')).json();
+
  cards.innerHTML = `
   <div class="card PLAYER">PLAYER<br>${d.percent.PLAYER||0}%</div>
   <div class="card BANKER">BANKER<br>${d.percent.BANKER||0}%</div>
   <div class="card TIE">TIE<br>${d.percent.TIE||0}%</div>`;
+
  grid.innerHTML = d.history.map(x=>`<div class="box ${x}">${x}</div>`).join('');
+
+ analysis.innerHTML = d.analysis
+   ? `<b>Análise:</b><br>
+      Dominante recente: ${d.analysis.dominante_recente}<br>
+      Sequência: ${d.analysis.sequencia}<br>
+      <i>${d.analysis.nota}</i>`
+   : '';
 }
+
 async function add(r){
- await fetch('/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({result:r})});
+ await fetch('/add',{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({result:r})
+ });
  load();
 }
+
 setInterval(load,1000);
 </script>
+
 </body>
 </html>
